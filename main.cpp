@@ -154,7 +154,7 @@ int main(int, char**)
 //      such that the absolute difference between nums[i] and nums[j] is at most t and the absolute difference
 //      between i and j is at most k.
 // -------------------------------------------------------------------------------------------------------
-
+#if 0
 using namespace std;
 #include <iostream>
 #include <vector>
@@ -231,6 +231,49 @@ int main(int, char**)
     Solution s;
 
     cout << "contains almost duplicate: " << ( s.containsNearbyAlmostDuplicate(v, k, t)==true ? "yes" : "no" ) << endl;
+
+    return 0;
+}
+#endif
+
+// -------------------------------------------------------------------------------------------------------
+// 476. Number Complement
+//      Given a positive integer, output its complement number. The complement strategy is to flip the bits
+//      of its binary representation.
+//      Note:
+//          The given integer is guaranteed to fit within the range of a 32-bit signed integer.
+//          You could assume no leading zero bit in the integer’s binary representation.
+//
+// https://graphics.stanford.edu/~seander/bithacks.html
+// -------------------------------------------------------------------------------------------------------
+
+using namespace std;
+#include <iostream>
+
+class Solution {
+public:
+    int findComplement(int num) {
+        if (num==0)
+            return 1;
+        if (num==1)
+            return 0;
+        int out = 0, pos = 0;
+        while(num) {
+            if (!(num & 1))
+                out |= 1 << pos;
+            num >>= 1;
+            ++pos;
+        }
+        return out;
+    }
+};
+
+int main(int, char**)
+{
+    int in = 9;
+    Solution s;
+
+    cout << "complement: " << s.findComplement(in) << endl;
 
     return 0;
 }
