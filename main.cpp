@@ -5,6 +5,22 @@
  *      Author: jemkov
  */
 
+#include <chrono>
+#include <functional>
+using namespace std;
+using namespace std::chrono;
+
+template <typename F, typename T, typename Duration = nanoseconds, typename ...Args>
+pair<int,typename Duration::rep> benchmark(F f, T t, int iterations, Args&& ...args)
+{
+    auto start = std::chrono::high_resolution_clock::now();
+    int res = 0;
+    for (int c=0; c < iterations; ++c)
+        res = (t.*f)(std::forward<Args>(args)...);
+    auto stop = std::chrono::high_resolution_clock::now();
+    return pair<int,typename Duration::rep>(res, duration_cast<Duration>(stop-start).count()/iterations);
+}
+
 // ---------------------------------------------------------
 // 561. Array Partition I
 // ---------------------------------------------------------
@@ -251,7 +267,6 @@ using namespace std;
 #include <iostream>
 #include <limits>
 
-
 class Solution {
 public:
     int findComplement(int num) {
@@ -289,20 +304,6 @@ public:
     }
 };
 
-#include <chrono>
-#include <functional>
-using namespace std::chrono;
-
-template <typename F, typename T, typename Duration = nanoseconds, typename ...Args>
-pair<int,typename Duration::rep> benchmark(F f, T t, int iterations, Args&& ...args)
-{
-    auto start = std::chrono::high_resolution_clock::now();
-    int res = 0;
-    for (int c=0; c < iterations; ++c)
-        res = (t.*f)(std::forward<Args>(args)...);
-    auto stop = std::chrono::high_resolution_clock::now();
-    return pair<int,typename Duration::rep>(res, duration_cast<Duration>(stop-start).count()/iterations);
-}
 
 int main(int, char**)
 {
