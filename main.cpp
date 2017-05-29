@@ -10,13 +10,13 @@
 using namespace std;
 using namespace std::chrono;
 
-template <typename F, typename T, typename Duration = nanoseconds, typename ...Args>
-pair<int,typename Duration::rep> benchmark(F f, T t, int iterations, Args&& ...args)
+template <typename F, typename Duration = nanoseconds, typename ...Args>
+pair<int,typename Duration::rep> benchmark(F f, int iterations, Args&& ...args)
 {
     auto start = std::chrono::high_resolution_clock::now();
     int res = 0;
     for (int c=0; c < iterations; ++c)
-        res = (t.*f)(std::forward<Args>(args)...);
+        res = f(std::forward<Args>(args)...);
     auto stop = std::chrono::high_resolution_clock::now();
     return pair<int,typename Duration::rep>(res, duration_cast<Duration>(stop-start).count()/iterations);
 }
@@ -253,6 +253,107 @@ int main(int, char**)
 #endif
 
 // -------------------------------------------------------------------------------------------------------
+// benchmark template tries
+// -------------------------------------------------------------------------------------------------------
+#if 0
+//#include <chrono>
+//#include <functional>
+//using namespace std;
+//using namespace std::chrono;
+
+//template <typename F, typename T, typename Duration = nanoseconds, typename ...Args>
+//pair<int,typename Duration::rep> benchmark(F f, T t, int iterations, Args&& ...args)
+//{
+//    auto start = std::chrono::high_resolution_clock::now();
+//    int res = 0;
+//    for (int c=0; c < iterations; ++c)
+//        res = (t.*f)(std::forward<Args>(args)...);
+//    auto stop = std::chrono::high_resolution_clock::now();
+//    return pair<int,typename Duration::rep>(res, duration_cast<Duration>(stop-start).count()/iterations);
+//}
+
+template <typename F, typename ...Args>
+int wrapper(F f, Args&& ...args)
+{
+    return f(std::forward<Args>(args)...);
+}
+
+int foo(int a, int b)
+{
+    return a + b;
+}
+
+int iterations = 100000000;
+{
+    int res = 0;
+    auto start = std::chrono::high_resolution_clock::now();
+    for (int c=0; c < iterations; ++c)
+        res = s.findComplement(in);
+    auto stop = std::chrono::high_resolution_clock::now();
+
+    cout << "complement: " << res << ", avg duration: " << duration_cast<nanoseconds>(stop-start).count()/iterations << " ns\n";
+}
+{
+    int res = 0;
+    auto start = std::chrono::high_resolution_clock::now();
+    for (int c=0; c < iterations; ++c)
+        res = s.findComplement2(in);
+    auto stop = std::chrono::high_resolution_clock::now();
+
+    cout << "complement2: " << res << ", avg duration: " << duration_cast<nanoseconds>(stop-start).count()/iterations << " ns\n";
+}
+{
+    cout << "builtin clz: " << __builtin_clz(in) << endl;
+    int res = 0;
+    auto start = std::chrono::high_resolution_clock::now();
+    for (int c=0; c < iterations; ++c)
+        res = s.findComplement3(in);
+    auto stop = std::chrono::high_resolution_clock::now();
+
+    cout << "complement3: " << res << ", avg duration: " << duration_cast<nanoseconds>(stop-start).count()/iterations << " ns\n";
+}
+
+//    {
+//        auto res = benchmark(&Solution::findComplement, s, 100000000, in);
+//        cout << "bench complement 1: " << res.first << ", avg duration: " << res.second << " ns\n";
+//    }
+//    {
+//        auto res = benchmark(&Solution::findComplement2, s, 100000000, in);
+//        cout << "bench complement 2: " << res.first << ", avg duration: " << res.second << " ns\n";
+//    }
+//    {
+//        auto res = benchmark(&Solution::findComplement3, s, 100000000, in);
+//        cout << "bench complement 3: " << res.first << ", avg duration: " << res.second << " ns\n";
+//    }
+//    {
+//        auto res = wrapper(foo, 55, 66);
+//        cout << "wrapper global function: " << res << endl;
+//    }
+//    {
+//        auto res = wrapper(mem_fn(&Solution::findComplement), s, 5);
+//        cout << "wrapper mem_fn: " << res << endl;
+//    }
+//    {
+//        Solution s;
+//        auto f = bind(&Solution::findComplement, s, _1);
+//        auto res = f(5);
+//        cout << "wrapper bind: " << bind(&Solution::findComplement, s, _1)(5) << endl;
+//    }
+//    {
+//        Solution s;
+//        auto f = bind(&Solution::findComplement, s);
+//        auto res = wrapper(f, 5);
+////        cout << "wrapper bind: " << res << endl;
+//    }
+
+{
+    auto res = benchmark(foo, 1000000, 55, 66);
+    cout << "bench foo: " << res.first << ", avg duration: " << res.second << " ns\n";
+}
+
+#endif
+
+// -------------------------------------------------------------------------------------------------------
 // 476. Number Complement
 //      Given a positive integer, output its complement number. The complement strategy is to flip the bits
 //      of its binary representation.
@@ -269,6 +370,9 @@ using namespace std;
 
 class Solution {
 public:
+    Solution()
+    {}
+
     int findComplement(int num) {
         if (num==0)
             return 1;
@@ -304,54 +408,21 @@ public:
     }
 };
 
-
 int main(int, char**)
 {
-    int in = 0x7fffffff;
+    int in = 5;
     Solution s;
 
-//    cout << "complement: " << s.findComplement(in) << endl;
-#if 0
-    int iterations = 100000000;
     {
-        int res = 0;
-        auto start = std::chrono::high_resolution_clock::now();
-        for (int c=0; c < iterations; ++c)
-            res = s.findComplement(in);
-        auto stop = std::chrono::high_resolution_clock::now();
-
-        cout << "complement: " << res << ", avg duration: " << duration_cast<nanoseconds>(stop-start).count()/iterations << " ns\n";
-    }
-    {
-        int res = 0;
-        auto start = std::chrono::high_resolution_clock::now();
-        for (int c=0; c < iterations; ++c)
-            res = s.findComplement2(in);
-        auto stop = std::chrono::high_resolution_clock::now();
-
-        cout << "complement2: " << res << ", avg duration: " << duration_cast<nanoseconds>(stop-start).count()/iterations << " ns\n";
-    }
-    {
-        cout << "builtin clz: " << __builtin_clz(in) << endl;
-        int res = 0;
-        auto start = std::chrono::high_resolution_clock::now();
-        for (int c=0; c < iterations; ++c)
-            res = s.findComplement3(in);
-        auto stop = std::chrono::high_resolution_clock::now();
-
-        cout << "complement3: " << res << ", avg duration: " << duration_cast<nanoseconds>(stop-start).count()/iterations << " ns\n";
-    }
-#endif
-    {
-        auto res = benchmark(&Solution::findComplement, s, 100000000, in);
+        auto res = benchmark(mem_fn(&Solution::findComplement), 100000000, s, in);
         cout << "bench complement 1: " << res.first << ", avg duration: " << res.second << " ns\n";
     }
     {
-        auto res = benchmark(&Solution::findComplement2, s, 100000000, in);
+        auto res = benchmark(mem_fn(&Solution::findComplement2), 100000000, s, in);
         cout << "bench complement 2: " << res.first << ", avg duration: " << res.second << " ns\n";
     }
     {
-        auto res = benchmark(&Solution::findComplement3, s, 100000000, in);
+        auto res = benchmark(mem_fn(&Solution::findComplement3), 100000000, s, in);
         cout << "bench complement 3: " << res.first << ", avg duration: " << res.second << " ns\n";
     }
 
