@@ -364,6 +364,7 @@ int iterations = 100000000;
 // https://graphics.stanford.edu/~seander/bithacks.html
 // -------------------------------------------------------------------------------------------------------
 
+#if 0
 using namespace std;
 #include <iostream>
 #include <limits>
@@ -425,6 +426,30 @@ int main(int, char**)
         auto res = benchmark(mem_fn(&Solution::findComplement3), 100000000, s, in);
         cout << "bench complement 3: " << res.first << ", avg duration: " << res.second << " ns\n";
     }
+
+    return 0;
+}
+#endif
+
+// -------------------------------------------------------------------------------------------------------
+// 557. Reverse Words in a String III
+//      Given a string, you need to reverse the order of characters in each word within a sentence while
+//      still preserving whitespace and initial word order.
+// -------------------------------------------------------------------------------------------------------
+
+using namespace std;
+#include <iostream>
+
+class Solution {
+public:
+    string reverseWords(string s) {
+
+    }
+};
+
+int main(int, char**)
+{
+    Solution s;
 
     return 0;
 }
