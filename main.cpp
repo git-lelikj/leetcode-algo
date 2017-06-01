@@ -11,14 +11,14 @@ using namespace std;
 using namespace std::chrono;
 
 template <typename F, typename Duration = nanoseconds, typename ...Args>
-pair<int,typename Duration::rep> benchmark(F f, int iterations, Args&& ...args)
+pair<string,typename Duration::rep> benchmark(F f, int iterations, Args&& ...args)
 {
     auto start = std::chrono::high_resolution_clock::now();
-    int res = 0;
+    string res;
     for (int c=0; c < iterations; ++c)
         res = f(std::forward<Args>(args)...);
     auto stop = std::chrono::high_resolution_clock::now();
-    return pair<int,typename Duration::rep>(res, duration_cast<Duration>(stop-start).count()/iterations);
+    return pair<string,typename Duration::rep>(res, duration_cast<Duration>(stop-start).count()/iterations);
 }
 
 // ---------------------------------------------------------
@@ -436,20 +436,88 @@ int main(int, char**)
 //      Given a string, you need to reverse the order of characters in each word within a sentence while
 //      still preserving whitespace and initial word order.
 // -------------------------------------------------------------------------------------------------------
-
+#if 0
 using namespace std;
 #include <iostream>
+#include <string>
 
 class Solution {
 public:
     string reverseWords(string s) {
-
+        auto word_start = s.find_first_not_of(" ", 0);
+        while (word_start != string::npos) {
+            auto word_end = s.find_first_of(" ", word_start);
+            string::size_type rvrs_end = ( word_end != string::npos ? word_end - 1  : s.size() - 1 );
+            while (word_start < rvrs_end) {
+                swap(s[rvrs_end--], s[word_start++]);
+            }
+            word_start = s.find_first_not_of(" \0", word_end, 2);
+        }
+        return s;
     }
 };
 
 int main(int, char**)
 {
     Solution s;
+
+    {
+        auto res = benchmark(mem_fn(&Solution::reverseWords), 1000000, s, "Ladenzon is full");
+        cout << "reverseWords: " << res.first << ", avg duration: " << res.second << " ns\n";
+    }
+
+    return 0;
+}
+#endif
+
+// -------------------------------------------------------------------------------------------------------
+// 151. Reverse Words in a String
+//      Given an input string, reverse the string word by word.
+//      For example,
+//      Given s = "the sky is blue",
+//      return "blue is sky the".
+//      Update (2015-02-12):
+//          For C programmers: Try to solve it in-place in O(1) space.
+// -------------------------------------------------------------------------------------------------------
+
+using namespace std;
+#include <iostream>
+#include <string>
+
+class Solution {
+public:
+    void reverseWords(string& s) {
+        string result;
+        if (s.size() <= 0)
+            return;
+        int word_start = 0, word_end = 0;
+        word_end = s.size() - 1;
+        while (word_end >= 0) {
+            for (; word_end >= 0 && s[word_end]==' '; --word_end)
+                ;
+            if (word_end < 0)
+                break;
+            for (word_start = word_end; word_start > 0 && s[word_start] != ' '; --word_start)
+                ;
+            result.append(s, word_start, (word_end - word_start + 1));
+            word_end = word_start;
+        }
+        swap(result, s);
+    }
+};
+
+int main(int, char**)
+{
+    Solution s;
+
+    string str = "abcd";
+    s.reverseWords(str);
+    cout << "Reversed words: " << str << endl;
+
+//    {
+//        auto res = benchmark(mem_fn(&Solution::reverseWords), 1000000, s, "Ladenzon is full");
+//        cout << "reverseWords: " << res.first << ", avg duration: " << res.second << " ns\n";
+//    }
 
     return 0;
 }
