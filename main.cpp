@@ -492,25 +492,37 @@ public:
             return;
         int word_start = 0, word_end = 0;
         word_end = s.size() - 1;
+//        cout << "entry: " << word_start << ":" << word_end << endl;
         while (word_end >= 0) {
             for (; word_end >= 0 && s[word_end]==' '; --word_end)
                 ;
+//            cout << "word search: " << word_start << ":" << word_end << endl;
             if (word_end < 0)
                 break;
-            for (word_start = word_end; word_start > 0 && s[word_start] != ' '; --word_start)
+            for (word_start = word_end; word_start >= 0 && s[word_start] != ' '; --word_start)
                 ;
-            result.append(s, word_start, (word_end - word_start + 1));
+//            cout << "append: " << word_start + 1 << ":" << word_end << endl;
+            result.append(s, word_start + 1, (word_end - word_start));
+            result.append(" ");
             word_end = word_start;
         }
+        if (result[result.size()-1] == ' ') {
+//        	cout << "remove trailing space from result\n";
+        	result.erase(result.size()-1, 1);
+        }
+//        cout << "result: " << result << endl;
         swap(result, s);
     }
 };
 
-int main(int, char**)
+int main(int argc, char** argv)
 {
     Solution s;
+#if 0
+abc def
+#endif
 
-    string str = "abcd";
+    string str = (argc > 1 ? argv[1] : "abc");
     s.reverseWords(str);
     cout << "Reversed words: " << str << endl;
 
