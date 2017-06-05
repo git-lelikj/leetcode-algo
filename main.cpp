@@ -10,15 +10,15 @@
 using namespace std;
 using namespace std::chrono;
 
-template <typename F, typename Duration = nanoseconds, typename ...Args>
-pair<string,typename Duration::rep> benchmark(F f, int iterations, Args&& ...args)
+template <typename Result, typename F, typename Duration = nanoseconds, typename ...Args>
+pair<Result,typename Duration::rep> benchmark(F f, int iterations, Args&& ...args)
 {
     auto start = std::chrono::high_resolution_clock::now();
-    string res;
+    Result res;
     for (int c=0; c < iterations; ++c)
         res = f(std::forward<Args>(args)...);
     auto stop = std::chrono::high_resolution_clock::now();
-    return pair<string,typename Duration::rep>(res, duration_cast<Duration>(stop-start).count()/iterations);
+    return pair<Result,typename Duration::rep>(res, duration_cast<Duration>(stop-start).count()/iterations);
 }
 
 // ---------------------------------------------------------
@@ -479,7 +479,7 @@ int main(int, char**)
 //      Update (2015-02-12):
 //          For C programmers: Try to solve it in-place in O(1) space.
 // -------------------------------------------------------------------------------------------------------
-
+#if 0
 using namespace std;
 #include <iostream>
 #include <string>
@@ -527,9 +527,59 @@ abc def
     cout << "Reversed words: " << str << endl;
 
 //    {
-//        auto res = benchmark(mem_fn(&Solution::reverseWords), 1000000, s, "Ladenzon is full");
-//        cout << "reverseWords: " << res.first << ", avg duration: " << res.second << " ns\n";
+//        auto f = mem_fn(&Solution::reverseWords);
+//        auto res = benchmark<int>(f, 10000000, s, str);
+//        cout << "Reversed words: " << str << ", avg duration: " << res.second << " ns\n";
 //    }
+
+    return 0;
+}
+#endif
+
+// -------------------------------------------------------------------------------------------------------
+// 204. Count Primes
+//      Count the number of prime numbers less than a non-negative number, n
+// -------------------------------------------------------------------------------------------------------
+
+using namespace std;
+#include <iostream>
+#include <cstdlib>
+
+class Solution {
+public:
+    inline bool isPrime_brute(int n) {
+        if (n < 4)
+            return true;
+        for (int div = 2; div < n; ++div) {
+            if ((n % div) == 0)
+                return false;
+        }
+        return true;
+    }
+
+    inline int countPrimes_brute(int n) {
+        int res = 0;
+        for (int c = 1; c <= n; ++c) {
+            if (isPrime_brute(n))
+                ++res;
+        }
+        return res;
+    }
+    int countPrimes(int n) {
+        return countPrimes_brute(n);
+    }
+};
+
+int main(int argc, char** argv)
+{
+    Solution s;
+    int in = (argc > 1 ? atoi(argv[1]) : 0);
+
+    {
+        auto f = mem_fn(&Solution::isPrime_brute);
+        auto res = benchmark<bool>(f, 1000, s, in);
+        cout << "Is prime: " << res.first << ", avg duration: " << res.second << " ns\n";
+    }
 
     return 0;
 }
