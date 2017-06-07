@@ -540,17 +540,37 @@ abc def
 // 204. Count Primes
 //      Count the number of prime numbers less than a non-negative number, n
 // -------------------------------------------------------------------------------------------------------
-
+#if 0
 using namespace std;
 #include <iostream>
 #include <cstdlib>
+#include <vector>
+#include <algorithm>
 
 class Solution {
 public:
     inline bool isPrime_brute(int n) {
+        if (n <= 1)
+            return false;
         if (n < 4)
             return true;
+        if (n % 2 == 0)
+            return false;
         for (int div = 2; div < n; ++div) {
+            if ((n % div) == 0)
+                return false;
+        }
+        return true;
+    }
+
+    inline bool isPrime_opt1(int n) {
+        if (n <= 1)
+            return false;
+        if (n < 4)
+            return true;
+        if (n % 2 == 0)
+            return false;
+        for (int div = 2; div*div <= n; ++div) {
             if ((n % div) == 0)
                 return false;
         }
@@ -559,14 +579,54 @@ public:
 
     inline int countPrimes_brute(int n) {
         int res = 0;
-        for (int c = 1; c <= n; ++c) {
-            if (isPrime_brute(n))
+        for (int c = 1; c < n; ++c) {
+            if (isPrime_opt1(c))
                 ++res;
         }
         return res;
     }
+
+    inline int countPrimes_sieve(int n) {
+        --n;
+//        cout << "test: " << n << endl;
+        if (n <= 1)
+            return 0;
+        if (n == 2)
+            return 1;
+        // number of odds - 1 (starting from 3)
+        int n_elements = std::ceil((double)n / 2.0) - 1;
+//        cout << "n elems: " << n_elements << endl;
+        // seive only odds, starting from 3
+        vector<bool> sieve(n_elements, true);
+//        for (auto elem: sieve) cout << elem << " "; cout << endl;
+        // index of currently processed value
+        int idx = 0;
+        // index of current value square
+        int square_idx = 3;
+        // step to sieve
+        int step = 3;
+        while (square_idx < n_elements) {
+            // if current is prime, sieve starting from its square index with step
+            if (sieve[idx] == true) {
+                for (int mark = square_idx; mark < n_elements; mark += step)
+                    sieve[mark] = false;
+            }
+//            cout << "idx: " << idx << ", square idx: " << square_idx << endl;
+//            for (auto elem: sieve) cout << elem << " "; cout << endl;
+            ++idx;
+            // this is optimization of:
+            // square_idx = 2*sqr(i) + 6*i + 3; delta_square_idx = square_idx(i+1) - square_idx(i) = step(i) + step(i+1)
+            square_idx += step;
+            // step = value = i*2 + 3; delta_step = step(i+1) - step(i) = 2
+            step += 2;
+            square_idx += step;
+        }
+        // return +1 for "2"
+        return count(sieve.begin(), sieve.end(), true) + 1;
+    }
+
     int countPrimes(int n) {
-        return countPrimes_brute(n);
+        return countPrimes_sieve(n);
     }
 };
 
@@ -575,11 +635,26 @@ int main(int argc, char** argv)
     Solution s;
     int in = (argc > 1 ? atoi(argv[1]) : 0);
 
+//    {
+//        auto f = mem_fn(&Solution::isPrime_brute);
+//        auto res = benchmark<bool>(f, 1000, s, in);
+//        cout << "Is prime: " << res.first << ", avg duration: " << res.second << " ns\n";
+//    }
+//    {
+//        auto f = mem_fn(&Solution::countPrimes);
+//        auto res = benchmark<int>(f, 100, s, in);
+//        cout << "Count primes: " << res.first << ", avg duration: " << res.second << " ns\n";
+//        // brute force: in: 1500000: Count primes: 114155, avg duration: 375296794 ns
+//    }
     {
-        auto f = mem_fn(&Solution::isPrime_brute);
-        auto res = benchmark<bool>(f, 1000, s, in);
-        cout << "Is prime: " << res.first << ", avg duration: " << res.second << " ns\n";
+        auto f = mem_fn(&Solution::countPrimes);
+        auto res = benchmark<int>(f, 1, s, in);
+        cout << "Count primes: " << res.first << ", avg duration: " << res.second << " ns\n";
+        // sieve: in: 1000001:  Count primes: 78498, avg duration:   34798167 ns
+        // sieve: in: 1500000:  Count primes: 114155, avg duration:  52675663 ns
+        // sieve: in: 10000000: Count primes: 664579, avg duration: 364715165 ns
     }
 
     return 0;
 }
+#endif
