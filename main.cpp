@@ -658,3 +658,29 @@ int main(int argc, char** argv)
     return 0;
 }
 #endif
+
+// -------------------------------------------------------------------------------------------------------
+// 172. Factorial Trailing Zeroes
+//      Given an integer n, return the number of trailing zeroes in n!.
+//      Note: Your solution should be in logarithmic time complexity.
+// -------------------------------------------------------------------------------------------------------
+
+class Solution {
+public:
+    int trailingZeroes(int n) {
+
+    }
+};
+
+int main(int argc, char** argv)
+{
+    Solution s;
+    int in = (argc > 1 ? atoi(argv[1]) : 0);
+    {
+        auto f = mem_fn(&Solution::trailingZeroes);
+        auto res = benchmark<int>(f, 1, s, in);
+        cout << "Trainling zeroes: " << res.first << ", avg duration: " << res.second << " ns\n";
+    }
+
+    return 0;
+}
