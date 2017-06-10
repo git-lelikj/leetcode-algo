@@ -664,11 +664,24 @@ int main(int argc, char** argv)
 //      Given an integer n, return the number of trailing zeroes in n!.
 //      Note: Your solution should be in logarithmic time complexity.
 // -------------------------------------------------------------------------------------------------------
+using namespace std;
+#include <iostream>
 
 class Solution {
 public:
     int trailingZeroes(int n) {
-
+    	int zero_count = 0;
+    	for (int div = 5; static_cast<int>(n / div) > 0; div *= 5) {
+    		zero_count += static_cast<int>(n / div);
+    	}
+    	return zero_count;
+    }
+    int trailingZeroes_opt(int n) {
+    	int zero_count = 0;
+    	for (long long div = 5; static_cast<int>(n / div) > 0; div += (div << 2)) {
+    		zero_count += static_cast<int>(n / div);
+    	}
+    	return zero_count;
     }
 };
 
@@ -678,8 +691,21 @@ int main(int argc, char** argv)
     int in = (argc > 1 ? atoi(argv[1]) : 0);
     {
         auto f = mem_fn(&Solution::trailingZeroes);
-        auto res = benchmark<int>(f, 1, s, in);
-        cout << "Trainling zeroes: " << res.first << ", avg duration: " << res.second << " ns\n";
+        auto res = benchmark<int>(f, 1000000, s, in);
+        cout << "Trailing zeroes: " << res.first << ", avg duration: " << res.second << " ns\n";
+        // input: 101 		Trailing zeroes: 24, avg duration: 			40 ns
+        // input: 1000 		Trailing zeroes: 249, avg duration: 		55 ns
+        // input: 1000000	Trailing zeroes: 249998, avg duration: 		110 ns
+        // input: 10^9		Trailing zeroes: 249999998, avg duration: 	144 ns
+    }
+    {
+        auto f = mem_fn(&Solution::trailingZeroes_opt);
+        auto res = benchmark<int>(f, 1000000, s, in);
+        cout << "Trailing zeroes opt: " << res.first << ", avg duration: " << res.second << " ns\n";
+        // input: 101 		Trailing zeroes: 24, avg duration: 			36 ns
+        // input: 1000 		Trailing zeroes: 2499, avg duration: 		48 ns
+        // input: 1000000	Trailing zeroes: 249998, avg duration:  	84 ns
+        // input: 10^9		Trailing zeroes: 249999998, avg duration: 	126 ns
     }
 
     return 0;
