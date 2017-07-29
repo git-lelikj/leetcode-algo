@@ -21,6 +21,16 @@ pair<Result,typename Duration::rep> benchmark(F f, int iterations, Args&& ...arg
     return pair<Result,typename Duration::rep>(res, duration_cast<Duration>(stop-start).count()/iterations);
 }
 
+template <typename F, typename Duration = nanoseconds, typename ...Args>
+typename Duration::rep benchmark_void(F f, int iterations, Args&& ...args)
+{
+    auto start = std::chrono::high_resolution_clock::now();
+    for (int c=0; c < iterations; ++c)
+        f(std::forward<Args>(args)...);
+    auto stop = std::chrono::high_resolution_clock::now();
+    return duration_cast<Duration>(stop-start).count()/iterations;
+}
+
 // ---------------------------------------------------------
 // 561. Array Partition I
 // ---------------------------------------------------------
@@ -664,6 +674,7 @@ int main(int argc, char** argv)
 //      Given an integer n, return the number of trailing zeroes in n!.
 //      Note: Your solution should be in logarithmic time complexity.
 // -------------------------------------------------------------------------------------------------------
+#if 0
 using namespace std;
 #include <iostream>
 
@@ -706,6 +717,46 @@ int main(int argc, char** argv)
         // input: 1000 		Trailing zeroes: 2499, avg duration: 		48 ns
         // input: 1000000	Trailing zeroes: 249998, avg duration:  	84 ns
         // input: 10^9		Trailing zeroes: 249999998, avg duration: 	126 ns
+    }
+
+    return 0;
+}
+#endif
+
+// -------------------------------------------------------------------------------------------------------
+// 9. Palindrome Number
+//    Determine whether an integer is a palindrome. Do this without extra space.
+// -------------------------------------------------------------------------------------------------------
+
+using namespace std;
+#include <iostream>
+#include <cmath>
+
+class Solution {
+public:
+    bool isPalindrome(int x) {
+        if (x < 0)
+            return false;
+        int n_digits = 0;
+        for (int div = x; div; div /= 10, ++n_digits)
+            ;
+        for (int digit = 1; digit <= n_digits / 2; ++digit) {
+            if ( (x / (int)std::pow(10,(digit - 1))) % 10 !=
+                 (x / (int)std::pow(10,(n_digits - digit))) % 10 )
+                return false;
+        }
+        return true;
+    }
+};
+
+int main(int argc, char** argv)
+{
+    Solution s;
+    int in = (argc > 1 ? atoi(argv[1]) : 0);
+    {
+        auto f = mem_fn(&Solution::isPalindrome);
+        auto res = benchmark<bool>(f, 1, s, in);
+        cout << "Palindrome: " << res.first << ", avg duration: " << res.second << " ns\n";
     }
 
     return 0;
