@@ -727,7 +727,7 @@ int main(int argc, char** argv)
 // 9. Palindrome Number
 //    Determine whether an integer is a palindrome. Do this without extra space.
 // -------------------------------------------------------------------------------------------------------
-
+#if 0
 using namespace std;
 #include <iostream>
 #include <cmath>
@@ -757,6 +757,88 @@ int main(int argc, char** argv)
         auto f = mem_fn(&Solution::isPalindrome);
         auto res = benchmark<bool>(f, 1, s, in);
         cout << "Palindrome: " << res.first << ", avg duration: " << res.second << " ns\n";
+    }
+
+    return 0;
+}
+#endif
+
+// -------------------------------------------------------------------------------------------------------
+// 111. Minimum Depth of Binary Tree
+//      Given a binary tree, find its minimum depth.
+//      The minimum depth is the number of nodes along the shortest path from the root node down to the nearest leaf node.
+// -------------------------------------------------------------------------------------------------------
+using namespace std;
+#include <iostream>
+#include <vector>
+#include <list>
+
+/**
+ * Definition for a binary tree node.
+ */
+struct TreeNode {
+    int val;
+    TreeNode *left;
+    TreeNode *right;
+    TreeNode(int x) : val(x), left(NULL), right(NULL) {}
+};
+
+struct Flat_bin_tree
+{
+    vector<TreeNode> nodes_;
+    size_t max_depth_;
+};
+
+bool list_of_empty_nodes(list<TreeNode*> node_list)
+{
+    for (auto node: node_list)
+        if (node != NULL) return false;
+    return true;
+}
+
+Flat_bin_tree serialize(TreeNode* root)
+{
+    Flat_bin_tree flat_bin_tree;
+    list<TreeNode*> this_level_nodes, next_level_nodes;
+    this_level_nodes.push_back(root);
+    size_t n_levels = 0;
+    for (bool stop_condition = false; !stop_condition; ) {
+        // populate next level nodes list
+        for (auto node: this_level_nodes) {
+            if (node == NULL) {
+                next_level_nodes.push_back(NULL);
+                next_level_nodes.push_back(NULL);
+            }
+            else {
+                next_level_nodes.push_back(node->left);
+                next_level_nodes.push_back(node->right);
+            }
+            stop_condition = list_of_empty_nodes(next_level_nodes);
+        }
+    }
+    return flat_bin_tree;
+}
+
+TreeNode* deserialize(const Flat_bin_tree& flat_bin_tree)
+{
+    return nullptr;
+}
+
+class Solution {
+public:
+    int minDepth(TreeNode* root) {
+
+    }
+};
+
+int main(int argc, char** argv)
+{
+    Solution s;
+    int in = (argc > 1 ? atoi(argv[1]) : 0);
+    {
+//        auto f = mem_fn(&Solution::isPalindrome);
+//        auto res = benchmark<bool>(f, 1, s, in);
+//        cout << "Palindrome: " << res.first << ", avg duration: " << res.second << " ns\n";
     }
 
     return 0;
