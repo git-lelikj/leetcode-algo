@@ -774,6 +774,7 @@ using namespace std;
 #include <list>
 #include <iterator>
 #include <cmath>
+#include <stack>
 
 /**
  * Definition for a binary tree node.
@@ -783,6 +784,13 @@ struct TreeNode {
     TreeNode *left;
     TreeNode *right;
     TreeNode(int x) : val(x), left(NULL), right(NULL) {}
+};
+
+struct Node_control_rec
+{
+    TreeNode* node_ = NULL;
+    bool checked_left_ = false;
+    bool checked_right_ = false;
 };
 
 struct Flat_bin_tree
@@ -895,7 +903,7 @@ TreeNode* deserialize(const Flat_bin_tree& flat_bin_tree)
 class Solution {
 public:
     int minDepth(TreeNode* root) {
-
+        stack<Node_control_rec> traverse_stack;
     }
 };
 
