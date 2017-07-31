@@ -772,6 +772,8 @@ using namespace std;
 #include <iostream>
 #include <vector>
 #include <list>
+#include <iterator>
+#include <cmath>
 
 /**
  * Definition for a binary tree node.
@@ -785,9 +787,21 @@ struct TreeNode {
 
 struct Flat_bin_tree
 {
-    vector<TreeNode> nodes_;
-    size_t max_depth_;
+    vector<TreeNode*> nodes_;
+    size_t max_depth_ = 0;
 };
+
+ostream& operator<<(ostream& os, const Flat_bin_tree &fbt)
+{
+    os << "depth: " << fbt.max_depth_ << ", nodes: ";
+    for (auto node: fbt.nodes_) {
+        if (node != NULL)
+            os << node->val << " ";
+        else
+            os << "null ";
+    }
+    return os;
+}
 
 bool list_of_empty_nodes(list<TreeNode*> node_list)
 {
@@ -799,10 +813,14 @@ bool list_of_empty_nodes(list<TreeNode*> node_list)
 Flat_bin_tree serialize(TreeNode* root)
 {
     Flat_bin_tree flat_bin_tree;
-    list<TreeNode*> this_level_nodes, next_level_nodes;
+    if (root == NULL)
+        return flat_bin_tree;
+    list<TreeNode*> this_level_nodes;
     this_level_nodes.push_back(root);
-    size_t n_levels = 0;
+    flat_bin_tree.nodes_.push_back(root);
+    flat_bin_tree.max_depth_ = 1;
     for (bool stop_condition = false; !stop_condition; ) {
+        list<TreeNode*> next_level_nodes;
         // populate next level nodes list
         for (auto node: this_level_nodes) {
             if (node == NULL) {
@@ -813,7 +831,14 @@ Flat_bin_tree serialize(TreeNode* root)
                 next_level_nodes.push_back(node->left);
                 next_level_nodes.push_back(node->right);
             }
-            stop_condition = list_of_empty_nodes(next_level_nodes);
+        }
+        stop_condition = list_of_empty_nodes(next_level_nodes);
+        if (!stop_condition) {
+            // copy new level nodes to final flat binary tree
+            copy(next_level_nodes.cbegin(), next_level_nodes.cend(), back_inserter(flat_bin_tree.nodes_));
+            // swap this and next level nodes
+            swap(this_level_nodes, next_level_nodes);
+            ++flat_bin_tree.max_depth_;
         }
     }
     return flat_bin_tree;
@@ -821,7 +846,50 @@ Flat_bin_tree serialize(TreeNode* root)
 
 TreeNode* deserialize(const Flat_bin_tree& flat_bin_tree)
 {
-    return nullptr;
+    if (!flat_bin_tree.nodes_.size())
+        return NULL;
+    std::size_t expected_size = (std::pow(2, flat_bin_tree.max_depth_) - 1);
+    if (flat_bin_tree.nodes_.size() != expected_size) {
+        cout << "incorrect flat size: " << flat_bin_tree.nodes_.size() << ", expected: " << expected_size << endl;
+        return NULL;
+    }
+    if (flat_bin_tree.nodes_[0] == NULL)
+        return NULL;
+    list<TreeNode*> this_level_nodes;
+    // create root node, add it to this level nodes
+    std::size_t curr_node_index = 0;
+    TreeNode* root = new TreeNode(flat_bin_tree.nodes_[curr_node_index++]->val);
+    this_level_nodes.push_back(root);
+    for (size_t level = 2; level <= flat_bin_tree.max_depth_; ++level) {
+//        cout << "deserialize: level: " << level << endl;
+        list<TreeNode*> next_level_nodes;
+        for (auto node: this_level_nodes) {
+            if (node == NULL) {
+                next_level_nodes.push_back(NULL);
+                next_level_nodes.push_back(NULL);
+                ++curr_node_index;
+            }
+            else {
+//                cout << "deserialize: processing: " << node->val << endl;
+                if (flat_bin_tree.nodes_[curr_node_index]) {
+                    TreeNode* left = new TreeNode(flat_bin_tree.nodes_[curr_node_index]->val);
+                    node->left = left;
+                    next_level_nodes.push_back(left);
+//                    cout << "deserialize: add left: " << left->val << endl;
+                }
+                ++curr_node_index;
+                if (flat_bin_tree.nodes_[curr_node_index]) {
+                    TreeNode* right = new TreeNode(flat_bin_tree.nodes_[curr_node_index]->val);
+                    node->right = right;
+                    next_level_nodes.push_back(right);
+//                    cout << "deserialize: add right: " << right->val << endl;
+                }
+                ++curr_node_index;
+            }
+        }
+        swap(this_level_nodes, next_level_nodes);
+    }
+    return root;
 }
 
 class Solution {
@@ -839,6 +907,35 @@ int main(int argc, char** argv)
 //        auto f = mem_fn(&Solution::isPalindrome);
 //        auto res = benchmark<bool>(f, 1, s, in);
 //        cout << "Palindrome: " << res.first << ", avg duration: " << res.second << " ns\n";
+    }
+
+    {
+//        TreeNode* n1 = new TreeNode(2);
+//        TreeNode* n2 = new TreeNode(3);
+//        TreeNode* n3 = new TreeNode(4);
+//        TreeNode* n4 = new TreeNode(5);
+//        TreeNode* root = new TreeNode(1);
+//        root->left = n1;
+//        root->right = n2;
+//        n1->left = n3;
+//        n2->left = n4;
+
+//        Flat_bin_tree flat_bin_tree = serialize();
+
+//        cout << flat_bin_tree << endl;
+    }
+
+    {
+        Flat_bin_tree input_bin_tree;
+        input_bin_tree.nodes_ = { new TreeNode(1),
+                                  new TreeNode(2), new TreeNode(3),
+                                  new TreeNode(4), new TreeNode(5), new TreeNode(6), new TreeNode(7),
+                                };
+        input_bin_tree.max_depth_ = 3;
+        TreeNode* root = deserialize(input_bin_tree);
+
+        Flat_bin_tree ouput_bin_tree = serialize(root);
+        cout << ouput_bin_tree << endl;
     }
 
     return 0;
