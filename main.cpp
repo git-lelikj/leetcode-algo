@@ -768,13 +768,14 @@ int main(int argc, char** argv)
 //      Given a binary tree, find its minimum depth.
 //      The minimum depth is the number of nodes along the shortest path from the root node down to the nearest leaf node.
 // -------------------------------------------------------------------------------------------------------
-using namespace std;
 #include <iostream>
 #include <vector>
 #include <list>
 #include <iterator>
 #include <cmath>
 #include <stack>
+#include <queue>
+using namespace std;
 
 /**
  * Definition for a binary tree node.
@@ -788,6 +789,9 @@ struct TreeNode {
 
 struct Node_control_rec
 {
+    Node_control_rec (TreeNode* node = NULL)
+        : node_(node)
+    {}
     TreeNode* node_ = NULL;
     bool checked_left_ = false;
     bool checked_right_ = false;
@@ -875,15 +879,18 @@ TreeNode* deserialize(const Flat_bin_tree& flat_bin_tree)
             if (node == NULL) {
                 next_level_nodes.push_back(NULL);
                 next_level_nodes.push_back(NULL);
-                ++curr_node_index;
+                curr_node_index += 2;
             }
             else {
-//                cout << "deserialize: processing: " << node->val << endl;
+//                cout << "deserialize: processing:curr_index: " << node->val << ":" << curr_node_index << endl;
                 if (flat_bin_tree.nodes_[curr_node_index]) {
                     TreeNode* left = new TreeNode(flat_bin_tree.nodes_[curr_node_index]->val);
                     node->left = left;
                     next_level_nodes.push_back(left);
 //                    cout << "deserialize: add left: " << left->val << endl;
+                }
+                else {
+                    next_level_nodes.push_back(NULL);
                 }
                 ++curr_node_index;
                 if (flat_bin_tree.nodes_[curr_node_index]) {
@@ -891,6 +898,9 @@ TreeNode* deserialize(const Flat_bin_tree& flat_bin_tree)
                     node->right = right;
                     next_level_nodes.push_back(right);
 //                    cout << "deserialize: add right: " << right->val << endl;
+                }
+                else {
+                    next_level_nodes.push_back(NULL);
                 }
                 ++curr_node_index;
             }
@@ -900,50 +910,151 @@ TreeNode* deserialize(const Flat_bin_tree& flat_bin_tree)
     return root;
 }
 
+// -------------------------------------------------------------------------------------------------------
+// DFS (depth first traversal) solution with stack
+// -------------------------------------------------------------------------------------------------------
+#if 0
 class Solution {
 public:
     int minDepth(TreeNode* root) {
+        if (root == NULL)
+            return 0;
         stack<Node_control_rec> traverse_stack;
+        traverse_stack.push(Node_control_rec(root));
+        bool stop = false;
+        std::uint32_t min_depth = 0;
+        while (!stop) {
+            if (traverse_stack.empty()) {
+                stop = true;
+                continue;
+            }
+            // optimize: if stack size already exceeds min depth, pop current node and continue
+            if (min_depth && (traverse_stack.size() > min_depth)) {
+//                cout << "min depth exceeded, pop" << endl;
+                traverse_stack.pop();
+                continue;
+            }
+            Node_control_rec &top_node = traverse_stack.top();
+            // if null node, pop and proceed -> shouldn happen
+            if (top_node.node_ == NULL) {
+                traverse_stack.pop();
+                continue;
+            }
+//            cout << "top node: val:checked_left:checked_right: "
+//                 << top_node.node_->val << ":"
+//                 << top_node.checked_left_ << ":"
+//                 << top_node.checked_right_ << ":"
+//                 << endl;
+            // if leaf, update min_depth
+            if ((top_node.node_->left == NULL) and (top_node.node_->right == NULL)) {
+                if ((min_depth == 0) || (traverse_stack.size() < min_depth)) {
+                    min_depth = traverse_stack.size();
+//                    cout << "update min depth: " << min_depth << endl;
+                }
+                // pop the node
+                traverse_stack.pop();
+                continue;
+            }
+            else {
+                // if left and right processed, pop node from the stack
+                if (top_node.checked_left_ && top_node.checked_right_) {
+                    traverse_stack.pop();
+//                    cout << "fully checked, pop" << endl;
+                    continue;
+                }
+                // if left not processed, push it to stack
+                if (!top_node.checked_left_) {
+                    if (top_node.node_->left != NULL) {
+                        top_node.checked_left_ = true;
+                        traverse_stack.push(top_node.node_->left);
+//                        cout << "left not checked, push" << endl;
+                    }
+                    else {
+                        top_node.checked_left_ = true;
+//                        cout << "left not checked and null, continue" << endl;
+                    }
+                    continue;
+                }
+                if (!top_node.checked_right_) {
+                    if (top_node.node_->right != NULL) {
+                        top_node.checked_right_ = true;
+                        traverse_stack.push(top_node.node_->right);
+//                        cout << "right not checked, push" << endl;
+                    }
+                    else {
+                        top_node.checked_right_ = true;
+//                        cout << "right not checked and null, continue" << endl;
+                    }
+                    continue;
+                }
+            }
+        }
+        return min_depth;
+    }
+};
+#endif
+
+class Solution {
+public:
+    int minDepth(TreeNode* root) {
+        if (root == NULL)
+            return 0;
+        std::size_t min_depth = 1;
+        queue<TreeNode*> bfs_queue;
+        bfs_queue.push(root);
+        while (bfs_queue.size()) {
+            std::size_t this_level_nodes = bfs_queue.size();
+            for (std::size_t n = 0; n < this_level_nodes; ++n) {
+                TreeNode* front_node = bfs_queue.front();
+                if (front_node) {
+                    // if it is leaf, stop and return min depth
+                    if ((front_node->left == NULL) && (front_node->right == NULL)) {
+                        return min_depth;
+                    }
+                    // push left (and right) to the queue
+                    if (front_node->left != NULL)
+                        bfs_queue.push(front_node->left);
+                    if (front_node->right != NULL)
+                        bfs_queue.push(front_node->right);
+                }
+                bfs_queue.pop();
+            }
+            // processed this level, update min_depth
+            ++min_depth;
+        }
+        return min_depth;
     }
 };
 
 int main(int argc, char** argv)
 {
-    Solution s;
-    int in = (argc > 1 ? atoi(argv[1]) : 0);
-    {
-//        auto f = mem_fn(&Solution::isPalindrome);
-//        auto res = benchmark<bool>(f, 1, s, in);
-//        cout << "Palindrome: " << res.first << ", avg duration: " << res.second << " ns\n";
-    }
-
-    {
-//        TreeNode* n1 = new TreeNode(2);
-//        TreeNode* n2 = new TreeNode(3);
-//        TreeNode* n3 = new TreeNode(4);
-//        TreeNode* n4 = new TreeNode(5);
-//        TreeNode* root = new TreeNode(1);
-//        root->left = n1;
-//        root->right = n2;
-//        n1->left = n3;
-//        n2->left = n4;
-
-//        Flat_bin_tree flat_bin_tree = serialize();
-
-//        cout << flat_bin_tree << endl;
-    }
 
     {
         Flat_bin_tree input_bin_tree;
+//        input_bin_tree.nodes_ = { new TreeNode(1),
+//                                  new TreeNode(2), new TreeNode(3),
+//                                  new TreeNode(7), NULL, new TreeNode(4), new TreeNode(5),
+//                                  new TreeNode(8), new TreeNode(9), NULL,  NULL, NULL, NULL, NULL, new TreeNode(6)
+//                                };
         input_bin_tree.nodes_ = { new TreeNode(1),
-                                  new TreeNode(2), new TreeNode(3),
-                                  new TreeNode(4), new TreeNode(5), new TreeNode(6), new TreeNode(7),
+//                                  new TreeNode(2), new TreeNode(3),
+//                                  new TreeNode(4), NULL, new TreeNode(5), new TreeNode(6),
+//                                  new TreeNode(7), NULL, NULL,  new TreeNode(8), NULL, NULL, NULL, NULL
                                 };
-        input_bin_tree.max_depth_ = 3;
+        input_bin_tree.max_depth_ = 1;
         TreeNode* root = deserialize(input_bin_tree);
+
+//        auto f = mem_fn(&Solution::minDepth);
+//        auto res = benchmark<int>(f, 1, root);
+//        cout << "Palindrome: " << res.first << ", avg duration: " << res.second << " ns\n";
+//        cout << "Binary tree min depth: start" << endl;
+        Solution s;
+        int min_depth = s.minDepth(root);
+        cout << "Binary tree min depth: " << min_depth << endl;
 
         Flat_bin_tree ouput_bin_tree = serialize(root);
         cout << ouput_bin_tree << endl;
+
     }
 
     return 0;
