@@ -768,6 +768,7 @@ int main(int argc, char** argv)
 //      Given a binary tree, find its minimum depth.
 //      The minimum depth is the number of nodes along the shortest path from the root node down to the nearest leaf node.
 // -------------------------------------------------------------------------------------------------------
+#if 0
 #include <iostream>
 #include <vector>
 #include <list>
@@ -909,7 +910,7 @@ TreeNode* deserialize(const Flat_bin_tree& flat_bin_tree)
     }
     return root;
 }
-
+#endif
 // -------------------------------------------------------------------------------------------------------
 // DFS (depth first traversal) solution with stack
 // -------------------------------------------------------------------------------------------------------
@@ -993,10 +994,10 @@ public:
     }
 };
 #endif
-
 // -------------------------------------------------------------------------------------------------------
 // BFS (breadth first traversal) solution with queue
 // -------------------------------------------------------------------------------------------------------
+#if 0
 class Solution {
 public:
     int minDepth(TreeNode* root) {
@@ -1053,3 +1054,26 @@ int main(int argc, char** argv)
 
     return 0;
 }
+#endif
+
+// -------------------------------------------------------------------------------------------------------
+// 51. N-Queens
+//Given an integer n, return all distinct solutions to the n-queens puzzle.
+
+//Each solution contains a distinct board configuration of the n-queens' placement, where 'Q' and '.' both indicate a queen and an empty space respectively.
+
+//For example,
+//There exist two distinct solutions to the 4-queens puzzle:
+
+//[
+// [".Q..",  // Solution 1
+//  "...Q",
+//  "Q...",
+//  "..Q."],
+
+// ["..Q.",  // Solution 2
+//  "Q...",
+//  "...Q",
+//  ".Q.."]
+//]
+// -------------------------------------------------------------------------------------------------------
