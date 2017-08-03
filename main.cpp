@@ -994,6 +994,9 @@ public:
 };
 #endif
 
+// -------------------------------------------------------------------------------------------------------
+// BFS (breadth first traversal) solution with queue
+// -------------------------------------------------------------------------------------------------------
 class Solution {
 public:
     int minDepth(TreeNode* root) {
@@ -1031,23 +1034,14 @@ int main(int argc, char** argv)
 
     {
         Flat_bin_tree input_bin_tree;
-//        input_bin_tree.nodes_ = { new TreeNode(1),
-//                                  new TreeNode(2), new TreeNode(3),
-//                                  new TreeNode(7), NULL, new TreeNode(4), new TreeNode(5),
-//                                  new TreeNode(8), new TreeNode(9), NULL,  NULL, NULL, NULL, NULL, new TreeNode(6)
-//                                };
         input_bin_tree.nodes_ = { new TreeNode(1),
-//                                  new TreeNode(2), new TreeNode(3),
-//                                  new TreeNode(4), NULL, new TreeNode(5), new TreeNode(6),
-//                                  new TreeNode(7), NULL, NULL,  new TreeNode(8), NULL, NULL, NULL, NULL
+                                  new TreeNode(2), new TreeNode(3),
+                                  new TreeNode(4), NULL, new TreeNode(5), new TreeNode(6),
+                                  new TreeNode(7), NULL, NULL,  new TreeNode(8), NULL, NULL, NULL, NULL
                                 };
-        input_bin_tree.max_depth_ = 1;
+        input_bin_tree.max_depth_ = 4;
         TreeNode* root = deserialize(input_bin_tree);
 
-//        auto f = mem_fn(&Solution::minDepth);
-//        auto res = benchmark<int>(f, 1, root);
-//        cout << "Palindrome: " << res.first << ", avg duration: " << res.second << " ns\n";
-//        cout << "Binary tree min depth: start" << endl;
         Solution s;
         int min_depth = s.minDepth(root);
         cout << "Binary tree min depth: " << min_depth << endl;
