@@ -1077,3 +1077,133 @@ int main(int argc, char** argv)
 //  ".Q.."]
 //]
 // -------------------------------------------------------------------------------------------------------
+
+#include <iostream>
+#include <vector>
+#include <ostream>
+#include <string>
+#include <stdexcept>
+
+using namespace std;
+#if 0 // draft
+using Chess_desk = vector<vector<std::uint8_t>>;
+using Result = vector<vector<string>>;
+
+ostream& operator<<(ostream& os, const Chess_desk& desk)
+{
+    for (auto &row: desk) {
+        for (auto &elem: row) {
+            os << +elem << " ";
+        }
+        os << endl;
+    }
+    return os;
+}
+
+class Solution {
+public:
+    vector<vector<string>> solveNQueens(int n) {
+        Chess_desk desk;
+        desk.resize(n);
+        for (size_t row = 0; row < n; ++row)
+            desk[row].resize(n, 0);
+        desk[0][1] = 1;
+        desk[1][0] = 1;
+        desk[1][1] = 1;
+        cout << desk;
+        Result result;
+        return result;
+    }
+};
+
+int main(int argc, char** argv)
+{
+    Solution s;
+
+    s.solveNQueens(4);
+
+    return 0;
+}
+#endif
+
+using Result = vector<vector<string>>;
+
+template <typename T>
+class Chess_desk
+{
+public:
+    const T Occupied_ = T{1};
+    const T Free_ = T{0};
+
+    Chess_desk(size_t dimension = 0)
+        : dimension_(dimension)
+    {
+        desk_.resize(dimension_);
+        for (size_t row = 0; row < dimension_; ++row)
+            desk_[row].resize(dimension_, Free_);
+    }
+
+    size_t dimension() const
+    {
+        return dimension_;
+    }
+
+    vector<T>& operator[](size_t row)
+    {
+        if (row < dimension_)
+            return desk_[row];
+        else
+            throw std::out_of_range("Row index out of range");
+    }
+
+    void place_queen(size_t row, size_t col)
+    {
+        if ((row < dimension_) && (col < dimension_)) {
+            desk_[row][col] = Occupied_;
+            for (size_t col_occ = 0; col_occ < dimension_; ++col_occ)
+                desk_[row][col_occ] = Occupied_;
+            for (size_t row_occ = 0; row_occ < dimension_; ++row_occ)
+                desk_[row_occ][col] = Occupied_;
+        }
+    }
+
+private:
+    using Representation = vector<vector<T>>;
+
+    size_t dimension_ = 0;
+    Representation desk_;
+};
+
+template <typename T>
+ostream& operator<<(ostream& os, Chess_desk<T>& desk)
+{
+    for (size_t row = 0; row < desk.dimension(); ++row) {
+        for (size_t col = 0; col < desk.dimension(); ++col) {
+            os << +desk[row][col] << " ";
+        }
+        os << endl;
+    }
+    return os;
+}
+
+class Solution {
+public:
+    vector<vector<string>> solveNQueens(int n) {
+        Chess_desk<char> desk(static_cast<size_t>(n));
+
+        desk.place_queen(1,1);
+
+        cout << desk;
+        Result result;
+        return result;
+    }
+};
+
+int main(int argc, char** argv)
+{
+    Solution s;
+
+    s.solveNQueens(4);
+
+    return 0;
+}
