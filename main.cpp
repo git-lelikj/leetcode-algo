@@ -1082,6 +1082,7 @@ int main(int argc, char** argv)
 #include <vector>
 #include <ostream>
 #include <string>
+#include <deque>
 #include <stdexcept>
 
 using namespace std;
@@ -1128,6 +1129,31 @@ int main(int argc, char** argv)
 
 using Result = vector<vector<string>>;
 
+struct Cell
+{
+    static const Cell Out_of_boundary;
+
+    int row_ = 0;
+    int col_ = 0;
+
+    Cell (int row, int col)
+        : row_(row), col_(col)
+    {}
+};
+
+const Cell Cell::Out_of_boundary = Cell{-1, -1};
+
+bool operator==(const Cell &l, const Cell &r)
+{
+    return (l.row_ == r.row_) && (l.col_ == r.col_);
+}
+
+bool operator!=(const Cell &l, const Cell &r)
+{
+    return (!(l == r));
+}
+
+
 template <typename T>
 class Chess_desk
 {
@@ -1156,15 +1182,45 @@ public:
             throw std::out_of_range("Row index out of range");
     }
 
-    void place_queen(size_t row, size_t col)
+    void mark_queen_cells(size_t row, size_t col, const T& mark_val)
     {
-        if ((row < dimension_) && (col < dimension_)) {
-            desk_[row][col] = Occupied_;
-            for (size_t col_occ = 0; col_occ < dimension_; ++col_occ)
-                desk_[row][col_occ] = Occupied_;
-            for (size_t row_occ = 0; row_occ < dimension_; ++row_occ)
-                desk_[row_occ][col] = Occupied_;
+        desk_[row][col] = mark_val;
+        for (int c = 0; c < dimension_; ++c)
+            desk_[row][c] = mark_val;
+        for (int r = 0; r < dimension_; ++r)
+            desk_[r][col] = mark_val;
+        for (int r = (row - 1), c = (col - 1); (r >= 0) && (c >= 0); --r, --c)
+            desk_[r][c] = mark_val;
+        for (int r = (row + 1), c = (col + 1); (r < dimension_) && (c < dimension_); ++r, ++c)
+            desk_[r][c] = mark_val;
+        for (int r = (row - 1), c = (col + 1); (r >= 0) && (c < dimension_); --r, ++c)
+            desk_[r][c] = mark_val;
+        for (int r = (row + 1), c = (col - 1); (r < dimension_) && (c >= 0); ++r, --c)
+            desk_[r][c] = mark_val;
+    }
+
+    void set_queen(size_t row, size_t col)
+    {
+        if ((row < dimension_) && (col < dimension_))
+            this->mark_queen_cells(row, col, Occupied_);
+    }
+
+    void remove_queen(size_t row, size_t col)
+    {
+        if ((row < dimension_) && (col < dimension_))
+            this->mark_queen_cells(row, col, Free_);
+    }
+
+    Cell find_next_free_cell(const Cell &start_cell)
+    {
+        if ((start_cell.row_ < 0) || (start_cell.row_ >= dimension_) ||
+            (start_cell.col_ < -1) || (start_cell.col_ >= dimension_))
+            return Cell::Out_of_boundary;
+        for (int col = start_cell.col_ + 1; col < dimension_; ++col) {
+            if (desk_[start_cell.row_][col] == Free_)
+                return Cell(start_cell.row_, col);
         }
+        return Cell::Out_of_boundary;
     }
 
 private:
@@ -1186,14 +1242,40 @@ ostream& operator<<(ostream& os, Chess_desk<T>& desk)
     return os;
 }
 
+template<typename T>
+int n_queens_backtrack(size_t n_queens)
+{
+    Chess_desk<T> desk(n_queens);
+    deque<Cell> backtrack_cells;
+    backtrack_cells.push_front(Cell(0, -1));
+    while (backtrack_cells.size()) {
+        Cell next_cell;
+        if (next_cell = desk.find_next_free_cell(backtrack_cells.front()) != Cell::Out_of_boundary) {
+
+        }
+        else {
+            // no free cell for this level, pop and backtrack
+            desk.remove_queen(backtrack_cells.front());
+            backtrack_cells.pop_front();
+            // reset previous queens to the desk
+        }
+    }
+}
+
 class Solution {
 public:
     vector<vector<string>> solveNQueens(int n) {
         Chess_desk<char> desk(static_cast<size_t>(n));
 
-        desk.place_queen(1,1);
+        desk.set_queen(5,3);
+        cout << desk << endl;
+        desk.set_queen(0,7);
+        cout << desk << endl;
 
+        desk.remove_queen(5,3);
+        desk.set_queen(0,7);
         cout << desk;
+
         Result result;
         return result;
     }
@@ -1203,7 +1285,7 @@ int main(int argc, char** argv)
 {
     Solution s;
 
-    s.solveNQueens(4);
+    s.solveNQueens(8);
 
     return 0;
 }
