@@ -753,12 +753,7 @@ int main(int argc, char** argv)
 {
     Solution s;
     int in = (argc > 1 ? atoi(argv[1]) : 0);
-    {
-        auto f = mem_fn(&Solution::isPalindrome);
-        auto res = benchmark<bool>(f, 1, s, in);
-        cout << "Palindrome: " << res.first << ", avg duration: " << res.second << " ns\n";
-    }
-
+c
     return 0;
 }
 #endif
@@ -1136,7 +1131,7 @@ struct Cell
     int row_ = 0;
     int col_ = 0;
 
-    Cell (int row, int col)
+    Cell (int row = 0, int col = 0)
         : row_(row), col_(col)
     {}
 };
@@ -1153,6 +1148,11 @@ bool operator!=(const Cell &l, const Cell &r)
     return (!(l == r));
 }
 
+ostream& operator<<(ostream &os, const Cell &c)
+{
+    os << "(" << c.row_ << "," << c.col_ << ")";
+    return os;
+}
 
 template <typename T>
 class Chess_desk
@@ -1161,12 +1161,20 @@ public:
     const T Occupied_ = T{1};
     const T Free_ = T{0};
 
-    Chess_desk(size_t dimension = 0)
+    Chess_desk(int dimension = 0)
         : dimension_(dimension)
     {
         desk_.resize(dimension_);
         for (size_t row = 0; row < dimension_; ++row)
             desk_[row].resize(dimension_, Free_);
+        this->initialize();
+    }
+
+    void initialize()
+    {
+        for (size_t row = 0; row < dimension_; ++row)
+            for (size_t col = 0; col < dimension_; ++col)
+                desk_[row][col] = T{0};
     }
 
     size_t dimension() const
@@ -1182,41 +1190,57 @@ public:
             throw std::out_of_range("Row index out of range");
     }
 
+    bool cell_out_of_boundary(const Cell &c)
+    {
+        return ((c.col_ < 0) || (c.col_ >= dimension_) ||
+                (c.row_ < 0) || (c.row_ >= dimension_));
+    }
+
     void mark_queen_cells(size_t row, size_t col, const T& mark_val)
     {
         desk_[row][col] = mark_val;
-        for (int c = 0; c < dimension_; ++c)
-            desk_[row][c] = mark_val;
-        for (int r = 0; r < dimension_; ++r)
+//        for (int c = 0; c < dimension_; ++c)
+//            desk_[row][c] = mark_val;
+        for (int r = row; r < dimension_; ++r)
             desk_[r][col] = mark_val;
-        for (int r = (row - 1), c = (col - 1); (r >= 0) && (c >= 0); --r, --c)
-            desk_[r][c] = mark_val;
+//        for (int r = (row - 1), c = (col - 1); (r >= 0) && (c >= 0); --r, --c)
+//            desk_[r][c] = mark_val;
         for (int r = (row + 1), c = (col + 1); (r < dimension_) && (c < dimension_); ++r, ++c)
             desk_[r][c] = mark_val;
-        for (int r = (row - 1), c = (col + 1); (r >= 0) && (c < dimension_); --r, ++c)
-            desk_[r][c] = mark_val;
+//        for (int r = (row - 1), c = (col + 1); (r >= 0) && (c < dimension_); --r, ++c)
+//            desk_[r][c] = mark_val;
         for (int r = (row + 1), c = (col - 1); (r < dimension_) && (c >= 0); ++r, --c)
             desk_[r][c] = mark_val;
     }
 
-    void set_queen(size_t row, size_t col)
+    void set_queen(const Cell &c)
     {
-        if ((row < dimension_) && (col < dimension_))
-            this->mark_queen_cells(row, col, Occupied_);
+        if ((c.row_ < dimension_) && (c.col_ < dimension_))
+            this->mark_queen_cells(c.row_, c.col_, Occupied_);
     }
 
-    void remove_queen(size_t row, size_t col)
+    void remove_queen(const Cell &c)
     {
-        if ((row < dimension_) && (col < dimension_))
-            this->mark_queen_cells(row, col, Free_);
+        if ((c.row_ < dimension_) && (c.col_ < dimension_))
+            this->mark_queen_cells(c.row_, c.col_, Free_);
+    }
+
+    template <typename Iter>
+    void refresh(Iter begin, Iter end)
+    {
+        this->initialize();
+        for (Iter it = begin; it != end; ++it)
+            this->set_queen(*it);
     }
 
     Cell find_next_free_cell(const Cell &start_cell)
     {
+        cout << "find: start: " << start_cell << endl;
         if ((start_cell.row_ < 0) || (start_cell.row_ >= dimension_) ||
             (start_cell.col_ < -1) || (start_cell.col_ >= dimension_))
             return Cell::Out_of_boundary;
         for (int col = start_cell.col_ + 1; col < dimension_; ++col) {
+            cout << "find: check: " << Cell(start_cell.row_, col) << endl;
             if (desk_[start_cell.row_][col] == Free_)
                 return Cell(start_cell.row_, col);
         }
@@ -1226,7 +1250,7 @@ public:
 private:
     using Representation = vector<vector<T>>;
 
-    size_t dimension_ = 0;
+    int dimension_ = 0;
     Representation desk_;
 };
 
@@ -1246,35 +1270,69 @@ template<typename T>
 int n_queens_backtrack(size_t n_queens)
 {
     Chess_desk<T> desk(n_queens);
-    deque<Cell> backtrack_cells;
-    backtrack_cells.push_front(Cell(0, -1));
-    while (backtrack_cells.size()) {
+    deque<Cell> backtrack_queens;
+    backtrack_queens.push_front(Cell(0, -1));
+    size_t n_solutions = 0;
+    while (backtrack_queens.size()) {
         Cell next_cell;
-        if (next_cell = desk.find_next_free_cell(backtrack_cells.front()) != Cell::Out_of_boundary) {
-
+        Cell current_queen_cell = backtrack_queens.front();
+        cout << "processing: " << current_queen_cell << endl;
+        if ((next_cell = desk.find_next_free_cell(current_queen_cell)) != Cell::Out_of_boundary) {
+            cout << "got next free cell: " << next_cell << endl;
+            // if this queen is on desk, remove from old cell
+//            if (!desk.cell_out_of_boundary(current_queen_cell))
+//                desk.remove_queen(current_queen_cell);
+            // got free cell, set queen there
+//            desk.set_queen(next_cell);
+            // update backtrack deque
+            backtrack_queens.pop_front();
+            backtrack_queens.push_front(next_cell);
+            // refresh desk
+            desk.refresh(backtrack_queens.begin(), backtrack_queens.end());
+            // if it is last level (n_queens), fix solution
+            cout << "desk: \n" << desk << endl;
+            if (backtrack_queens.size() == n_queens) {
+                cout << "got solution: ";
+                for (auto &queen_cell: backtrack_queens)
+//                    cout << "(" << queen_cell.row_ << "," << queen_cell.col_ << ") ";
+                    cout << queen_cell << " ";
+                cout << endl;
+                ++n_solutions;
+            }
+            else {
+                cout << "proceeding to next level: " << Cell(next_cell.row_ + 1, -1) << endl;
+                // push queen to the next level, out of boundary, for the next cycle search
+                backtrack_queens.push_front(Cell(next_cell.row_ + 1, -1));
+            }
         }
         else {
+            cout << "no free cells on level: " << current_queen_cell << endl;
             // no free cell for this level, pop and backtrack
-            desk.remove_queen(backtrack_cells.front());
-            backtrack_cells.pop_front();
+//            bool cell_out_of_bound = desk.cell_out_of_boundary(current_queen_cell);
+//            if (!cell_out_of_bound)
+//                desk.remove_queen(current_queen_cell);
+            backtrack_queens.pop_front();
             // reset previous queens to the desk
+            if (!desk.cell_out_of_boundary(current_queen_cell)) {
+//                for (auto &queen_cell: backtrack_queens)
+//                    desk.set_queen(queen_cell);
+                desk.refresh(backtrack_queens.begin(), backtrack_queens.end());
+            }
+            cout << "desk: \n" << desk << endl;
         }
     }
+    return n_solutions;
 }
 
 class Solution {
 public:
     vector<vector<string>> solveNQueens(int n) {
-        Chess_desk<char> desk(static_cast<size_t>(n));
 
-        desk.set_queen(5,3);
-        cout << desk << endl;
-        desk.set_queen(0,7);
-        cout << desk << endl;
+        Chess_desk<char> desk(n);
 
-        desk.remove_queen(5,3);
-        desk.set_queen(0,7);
-        cout << desk;
+        int n_solutions = n_queens_backtrack<char>(n);
+
+        cout << "number of solutions: " << n_solutions << endl;
 
         Result result;
         return result;
@@ -1283,9 +1341,16 @@ public:
 
 int main(int argc, char** argv)
 {
-    Solution s;
+    int in = (argc > 1 ? atoi(argv[1]) : 0);
 
-    s.solveNQueens(8);
+    Solution s;
+//    s.solveNQueens(in);
+
+    {
+        auto f = mem_fn(&Solution::solveNQueens);
+        auto res = benchmark<vector<vector<string>>>(f, 1, s, in);
+        cout << "N_queens: " << "avg duration: " << res.second << " ns\n";
+    }
 
     return 0;
 }
