@@ -1235,12 +1235,12 @@ public:
 
     Cell find_next_free_cell(const Cell &start_cell)
     {
-        cout << "find: start: " << start_cell << endl;
+//        cout << "find: start: " << start_cell << endl;
         if ((start_cell.row_ < 0) || (start_cell.row_ >= dimension_) ||
             (start_cell.col_ < -1) || (start_cell.col_ >= dimension_))
             return Cell::Out_of_boundary;
         for (int col = start_cell.col_ + 1; col < dimension_; ++col) {
-            cout << "find: check: " << Cell(start_cell.row_, col) << endl;
+//            cout << "find: check: " << Cell(start_cell.row_, col) << endl;
             if (desk_[start_cell.row_][col] == Free_)
                 return Cell(start_cell.row_, col);
         }
@@ -1267,8 +1267,9 @@ ostream& operator<<(ostream& os, Chess_desk<T>& desk)
 }
 
 template<typename T>
-int n_queens_backtrack(size_t n_queens)
+Result n_queens_backtrack(size_t n_queens)
 {
+    Result result;
     Chess_desk<T> desk(n_queens);
     deque<Cell> backtrack_queens;
     backtrack_queens.push_front(Cell(0, -1));
@@ -1276,66 +1277,57 @@ int n_queens_backtrack(size_t n_queens)
     while (backtrack_queens.size()) {
         Cell next_cell;
         Cell current_queen_cell = backtrack_queens.front();
-        cout << "processing: " << current_queen_cell << endl;
+//        cout << "processing: " << current_queen_cell << endl;
         if ((next_cell = desk.find_next_free_cell(current_queen_cell)) != Cell::Out_of_boundary) {
-            cout << "got next free cell: " << next_cell << endl;
-            // if this queen is on desk, remove from old cell
-//            if (!desk.cell_out_of_boundary(current_queen_cell))
-//                desk.remove_queen(current_queen_cell);
-            // got free cell, set queen there
-//            desk.set_queen(next_cell);
+//            cout << "got next free cell: " << next_cell << endl;
             // update backtrack deque
             backtrack_queens.pop_front();
             backtrack_queens.push_front(next_cell);
             // refresh desk
             desk.refresh(backtrack_queens.begin(), backtrack_queens.end());
             // if it is last level (n_queens), fix solution
-            cout << "desk: \n" << desk << endl;
+//            cout << "desk: \n" << desk << endl;
             if (backtrack_queens.size() == n_queens) {
-                cout << "got solution: ";
-                for (auto &queen_cell: backtrack_queens)
-//                    cout << "(" << queen_cell.row_ << "," << queen_cell.col_ << ") ";
-                    cout << queen_cell << " ";
-                cout << endl;
+//                cout << "got solution: ";
+//                for (auto &queen_cell: backtrack_queens)
+//                    cout << queen_cell << " ";
+//                for (auto it = backtrack_queens.rbegin(); it != backtrack_queens.rend(); ++it)
+//                    cout << *it;
+//                cout << endl;
+                // format solution and add to result
+                vector<string> solution;
+                for (auto it = backtrack_queens.rbegin(); it != backtrack_queens.rend(); ++it) {
+                    string s(n_queens, '.');
+                    s[(*it).col_] = 'Q';
+                    solution.push_back(s);
+                }
+                result.push_back(solution);
                 ++n_solutions;
             }
             else {
-                cout << "proceeding to next level: " << Cell(next_cell.row_ + 1, -1) << endl;
+//                cout << "proceeding to next level: " << Cell(next_cell.row_ + 1, -1) << endl;
                 // push queen to the next level, out of boundary, for the next cycle search
                 backtrack_queens.push_front(Cell(next_cell.row_ + 1, -1));
             }
         }
         else {
-            cout << "no free cells on level: " << current_queen_cell << endl;
+//            cout << "no free cells on level: " << current_queen_cell << endl;
             // no free cell for this level, pop and backtrack
-//            bool cell_out_of_bound = desk.cell_out_of_boundary(current_queen_cell);
-//            if (!cell_out_of_bound)
-//                desk.remove_queen(current_queen_cell);
             backtrack_queens.pop_front();
             // reset previous queens to the desk
             if (!desk.cell_out_of_boundary(current_queen_cell)) {
-//                for (auto &queen_cell: backtrack_queens)
-//                    desk.set_queen(queen_cell);
                 desk.refresh(backtrack_queens.begin(), backtrack_queens.end());
             }
-            cout << "desk: \n" << desk << endl;
+//            cout << "desk: \n" << desk << endl;
         }
     }
-    return n_solutions;
+    return result;
 }
 
 class Solution {
 public:
     vector<vector<string>> solveNQueens(int n) {
-
-        Chess_desk<char> desk(n);
-
-        int n_solutions = n_queens_backtrack<char>(n);
-
-        cout << "number of solutions: " << n_solutions << endl;
-
-        Result result;
-        return result;
+        return n_queens_backtrack<char>(n);
     }
 };
 
@@ -1344,13 +1336,25 @@ int main(int argc, char** argv)
     int in = (argc > 1 ? atoi(argv[1]) : 0);
 
     Solution s;
-//    s.solveNQueens(in);
-
-    {
-        auto f = mem_fn(&Solution::solveNQueens);
-        auto res = benchmark<vector<vector<string>>>(f, 1, s, in);
-        cout << "N_queens: " << "avg duration: " << res.second << " ns\n";
+    Result result = s.solveNQueens(in);
+    cout << "N_queens " << in << " got " << result.size() << " solutions:\n";
+    for (auto &solution: result) {
+        for (auto &queen: solution)
+            cout << queen << ",\n";
+        cout << endl;
     }
+
+//    {
+//        auto f = mem_fn(&Solution::solveNQueens);
+//        auto res = benchmark<vector<vector<string>>>(f, 1, s, in);
+//        cout << "N_queens: " << "avg duration: " << res.second << " ns\n";
+//        cout << "solutions:\n";
+//        for (auto &solution: res) {
+//            for (auto &queen: solution)
+//                cout << queen << ",\n";
+//            cout << endl;
+//        }
+//    }
 
     return 0;
 }
