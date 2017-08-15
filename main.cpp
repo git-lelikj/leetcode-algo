@@ -1324,10 +1324,10 @@ using namespace std;
 
 class Solution {
 public:
-    vector<pair<int, int>> getSkyline(vector<vector<int>>& buildings) {
-        using Buildings_type = vector<vector<int>>;
-        using Skyline_type = vector<pair<int, int>>;
+    using Buildings_type = vector<vector<int>>;
+    using Skyline_type = vector<pair<int, int>>;
 
+    vector<pair<int, int>> getSkyline(vector<vector<int>>& buildings) {
         Skyline_type skyline;
         if (buildings.size() == 0)
             return skyline;
@@ -1337,12 +1337,68 @@ public:
             skyline.emplace_back(buildings[0][0], buildings[0][2]);
             skyline.emplace_back(buildings[0][1], 0);
         }
-        // apply divide and conquier
+        // apply divide and conquer
         // 1. divide
         size_t median = buildings.size() / 2;
         // 2. solve parts
-        Buildings_type buildings1(buildings.begin(), buildings.begin() + median);
+        Buildings_type buildings1(buildings.begin(), buildings.begin() + (median - 1));
         Skyline_type  skyline1 = getSkyline(buildings1);
+        Buildings_type buildings2(buildings.begin() + median, buildings.end());
+        Skyline_type  skyline2 = getSkyline(buildings2);
+        // 3. merge
+        skyline = this->merge_skylines(skyline1, skyline2);
+        return skyline;
+    }
+
+protected:
+    Skyline_type merge_skylines(const Skyline_type &left, const Skyline_type &right)
+    {
+        Skyline_type merged;
+        size_t max_height = 0, max_prev_height = 0;
+        for (auto it_left = left.begin(), it_right = right.begin(); it_left != left.end() || it_right != right.end(); ) {
+            if (it_left == left.end()) {
+                //TBD
+                ++it_right;
+                continue;
+            }
+            if (it_right == right.end()) {
+                //TBD
+                ++it_left;
+                continue;
+            }
+            if (it_left->first < it_right->first) {
+                if (it_left->second > max_height) {
+                    merged.emplace_back(it_left->first, it_left->second);
+                    max_prev_height = max_height;
+                    max_height = it_left->second;
+                }
+                else {
+                    max_prev_height = it_left->second;
+                }
+                ++it_left;
+                continue;
+            }
+            if (it_left->first > it_right->first) {
+                if (it_right->second > max_height) {
+                    merged.emplace_back(it_right->first, it_right->second);
+                    max_height = it_right->second;
+                }
+                ++it_right;
+                continue;
+            }
+            if (it_left->first == it_right->first) {
+                size_t max_of_two = std::max(it_left->second, it_right->second);
+                if (max_of_two > max_height) {
+                    merged.emplace_back(it_left->first, max_of_two);
+                    max_height = max_of_two;
+                }
+                ++it_left;
+                ++it_right;
+                continue;
+            }
+
+        }
+        return merged;
     }
 };
 
