@@ -1316,7 +1316,7 @@ int main(int argc, char** argv)
 //    There must be no consecutive horizontal lines of equal height in the output skyline. For instance, [...[2 3], [4 5], [7 5], [11 5], [12 7]...] is not acceptable;
 //    the three lines of height 5 should be merged into one in the final output as such: [...[2 3], [4 5], [12 7], ...]
 // -------------------------------------------------------------------------------------------------------
-
+#if 0 // TBD: this soultion is uncomplete
 #include <iostream>
 #include <vector>
 #include <utility>
@@ -1368,11 +1368,12 @@ protected:
             }
             if (it_left->first < it_right->first) {
                 if (it_left->second > max_height) {
+                    // point above current skyline, store it, update max_*_height(s)
                     merged.emplace_back(it_left->first, it_left->second);
                     max_prev_height = max_height;
                     max_height = it_left->second;
                 }
-                else {
+                else if (it_left->second < max_height) {
                     max_prev_height = it_left->second;
                 }
                 ++it_left;
@@ -1421,3 +1422,4 @@ int main(int argc, char** argv)
 
     return 0;
 }
+#endif
