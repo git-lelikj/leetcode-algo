@@ -1423,3 +1423,74 @@ int main(int argc, char** argv)
     return 0;
 }
 #endif
+
+// -------------------------------------------------------------------------------------------------------
+// Dynamic Programming
+// -------------------------------------------------------------------------------------------------------
+
+// -------------------------------------------------------------------------------------------------------
+// 300. Longest Increasing Subsequence
+//Given an unsorted array of integers, find the length of longest increasing subsequence.
+
+//For example,
+//Given [10, 9, 2, 5, 3, 7, 101, 18],
+//The longest increasing subsequence is [2, 3, 7, 101], therefore the length is 4. Note that there may be more than one LIS combination,
+//it is only necessary for you to return the length.
+
+//Your algorithm should run in O(n2) complexity.
+
+//Follow up: Could you improve it to O(n log n) time complexity?
+// -------------------------------------------------------------------------------------------------------
+#include <vector>
+#include <iostream>
+using namespace std;
+
+class Solution {
+public:
+    int lengthOfLIS(vector<int>& nums) {
+        size_t input_size = nums.size();
+        if (!input_size)
+            return 0;
+        if (input_size == 1)
+            return 1;
+
+        vector<int> lis_results(input_size, 0);
+        int lis_length = 1;
+        lis_results[0] = 1;
+
+        for (int i = 1; i < input_size; ++i) {
+            if (nums[i] == nums[i-1]) {
+                lis_results[i] = lis_results[i-1];
+                continue;
+            }
+            int lis_max = 1;
+            for (int j = i - 1; j >= 0; --j) {
+                if (nums[j] < nums[i]) {
+                    lis_max = max(lis_max, lis_results[j] + 1);
+                }
+            }
+            lis_results[i] = lis_max;
+            lis_length = max(lis_length, lis_max);
+        }
+//        cout << "LIS results:\n";
+//        for (auto elem: lis_results) {
+//            cout << elem << " ";
+//        }
+//        cout << endl;
+        return lis_length;
+    }
+};
+
+int main(int argc, char** argv)
+{
+    int in = (argc > 1 ? atoi(argv[1]) : 0);
+
+    Solution s;
+
+//    vector<int> input = {10, 9, 2, 5, 3, 7, 101, 18};
+    vector<int> input = {10, 10, 11};
+
+    cout << "Resulting LIS: " << s.lengthOfLIS(input) << endl;
+
+    return 0;
+}
