@@ -1441,6 +1441,11 @@ int main(int argc, char** argv)
 
 //Follow up: Could you improve it to O(n log n) time complexity?
 // -------------------------------------------------------------------------------------------------------
+
+// -------------------------------------------------------------------------------------------------------
+// n^2 solution
+// -------------------------------------------------------------------------------------------------------
+#if 0
 #include <vector>
 #include <iostream>
 using namespace std;
@@ -1480,6 +1485,60 @@ public:
         return lis_length;
     }
 };
+#endif
+
+// -------------------------------------------------------------------------------------------------------
+// log(n) solution
+// -------------------------------------------------------------------------------------------------------
+#include <vector>
+#include <map>
+#include <iostream>
+using namespace std;
+
+class Solution {
+public:
+    // dictionary of value:lis_count pairs;
+    // it's a bit more convenient to keep it descending order
+    using Lis_map = multimap<int, int, greater<int>>;
+
+    int lengthOfLIS(vector<int>& nums) {
+        size_t input_size = nums.size();
+        if (!input_size)
+            return 0;
+        if (input_size == 1)
+            return 1;
+
+        int lis_result_length = 1;
+        Lis_map lis_results;
+        lis_results.insert({nums[0], 1});
+
+        for (int i = 1; i < input_size; ++i) {
+            if (nums[i] == nums[i-1]) {
+                // skip equal elements since it doesnt change the result LIS
+                continue;
+            }
+
+            int elem_lis_max = 1;
+            // find where this element would get inserted
+            auto elem_pos = lis_results.equal_range(nums[i]);
+            // walk over elements with less value, find one with max lis counter
+            for (auto it = elem_pos.first; it != lis_results.end(); ++it) {
+                if (nums[i] != it->first)
+                    elem_lis_max = max(elem_lis_max, it->second + 1);
+            }
+            // insert new element to result map, use found position as a hint
+            lis_results.insert(elem_pos.second, {nums[i], elem_lis_max});
+            // update result lis length if changed
+            lis_result_length = max(lis_result_length, elem_lis_max);
+        }
+        cout << "LIS results:\n";
+        for (auto elem: lis_results) {
+            cout << elem.first << ":" << elem.second << " ";
+        }
+        cout << endl;
+        return lis_result_length;
+    }
+};
 
 int main(int argc, char** argv)
 {
@@ -1488,7 +1547,7 @@ int main(int argc, char** argv)
     Solution s;
 
 //    vector<int> input = {10, 9, 2, 5, 3, 7, 101, 18};
-    vector<int> input = {10, 10, 11};
+    vector<int> input = {3, 2, 1, 2, 1, 2, 1, 1, 3, 2, 1, 4, 2, 1, 5};
 
     cout << "Resulting LIS: " << s.lengthOfLIS(input) << endl;
 
